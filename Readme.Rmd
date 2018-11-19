@@ -1,0 +1,34 @@
+---
+title: "Introduction"
+author: "Thomas Källman"
+date: '2018-11-19'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Bakgrund
+Som en del av arbetet med att göra DNA-extrakt och genetiska data enklare att spåra och dela med sig av har BIO på NRM implementerat en lokal version av seqdb. Denna databasen är ett mer eller mindre komplett LIMS system, som vi endast utnytt jar en mindre del av. Ett av CGIs större projekt är genotypning av björnspillning som underlag för Naturvårdsverkets övervakning av björnpopulationen. Inom detta projekt genotypas årligen mellan 1000 och 5000 björnspillningsprover på ett antal mikrosatelliter och används för att estimera storleken på den svenska björnpopulationen.
+
+### Import fil
+Det import fil som vi ämnar använda för detta projekt har en predefinierat format som i nuvarande läge inte är enkel att förändra, men som när data väl är importerat enkelt kan exporteras och sedan kan man vid behov förändra exporterade data och sedan importera den nya information via det formatet och på så sätt finns det åtminstone en viss flexibilitet in systemet. 
+
+### Krav på importfilen
+Den nuvarande filformatet skall vara en excel med följande kolumner:
+
+Position,  Tube,  Container Name,  NRMID,  IndividID,  Species,  Sex,  date,  Latitude (WGS84),  Longitude (WGS84),  Municipal,  County,  MU09 - 1,  MU09 - 2,  MU10 - 1,  MU10 - 2,  MU05 - 1,  MU05 - 2,  MU23 - 1,  MU23 - 2,  MU51 - 1,  MU51 - 2,  MU59 - 1,  MU59 - 2,  G10L - 1,  G10L- 2,  MU50 - 1,  MU50 - 2
+
+De första tre kolumnerna är helt enkelt information om var det fysiska DNA extraket exakt är lagrat. Därefter följer två id-kolumner som skiljer sig på det sättet att den första är unik för vardera prov som samlats in och den senare helt enkelt är vilket individ som vi fått spillning från och är ett av resultat som erhålls när prover matchas efter analys. NRMID har formatet NRM-CGI-###### där de sista är 6 siffror medan individid är namnet individen har i rovbase och oftast är det typ BI######  Sedan följer 7 kolumner med metadata om individen, art och kön är också ett resultat av genetiska analysen. GPS koordinaterna skall anges i WGS84 decimalformat. Efter dessa kommer allelstorlekr för de 9SSR locus som genotypas på varje prov. De två allelerna skall kodas i varsin kolumn så det är två kolumner för vardera loci och samma värde i bägge för ett givet loci innebär att individen är homozygot för den markören. 
+
+### Så skapas filen
+
+För att skapa filen krävs att vi lägger ihop information från ett antal olika källor och sedan krävs en konvertering av GPS-koordinater från SWEREF som vi får från Rovbase till WGS84 som används i seqdb. Vidare krävs att vi har förberett en platta med DNA i micronics plattor och sedan skannad denna. Arbetsordningen är således som följer:
+
+1. Fyll en micronicsplatta med DNA.
+2. Skanna plattan och lägg till NRMID. Detta id skall vara unikt
+3. Addera metadata från rovbase inklusive konverterade GPS koordinater
+4. Addera genetiska data för proverna på plattan. Notera att samma individ kan ibland ha en mismatch alternativ ha loci som inte fungerat så kopiera inte information bara för två prover har samma id utan kolla att det verkligen finns genetiska data.
+
+För att underlätta arbetet med detta finns det här ett skript som gör alla steg efter förutom det flytten av de fysiska proverna.
